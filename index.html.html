@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>A IA que entende o wellness — Plexo</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=DM+Sans:wght@300;400;500&family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --clay:    #C07A5A;
+    --rose:    #D9B0A3;
+    --cream:   #F8F2EB;
+    --sage:    #7A9E8E;
+    --espresso:#1E1410;
+    --sand:    #EDE3D6;
+    --mist:    #F0EBE3;
+    --accent:  #9B6B4E;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--espresso);
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* CUSTOM CURSOR */
+  .cursor {
+    position: fixed; top: 0; left: 0;
+    width: 12px; height: 12px;
+    background: var(--clay);
+    border-radius: 50%;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%,-50%);
+    transition: transform .15s ease, width .2s ease, height .2s ease, background .2s ease;
+    mix-blend-mode: multiply;
+  }
+  .cursor.grow { width: 40px; height: 40px; background: var(--rose); }
+
+  /* NOISE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 0; opacity: .4;
+  }
+
+  /* HERO */
+  .hero {
+    min-height: 100vh;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    padding: 0;
+    position: relative;
+    overflow: hidden;
+    background: var(--espresso);
+  }
+
+  .hero-bg {
+    position: absolute; inset: 0;
+    background: radial-gradient(ellipse 80% 60% at 70% 40%, #3D1F14 0%, var(--espresso) 70%);
+  }
+  .hero-circle {
+    position: absolute;
+    border-radius: 50%;
+    opacity: .12;
+  }
+  .hero-circle.c1 {
+    width: 600px; height: 600px;
+    background: var(--clay);
+    top: -100px; right: -100px;
+    animation: drift 18s ease-in-out infinite alternate;
+  }
+  .hero-circle.c2 {
+    width: 300px; height: 300px;
+    background: var(--rose);
+    bottom: -50px; left: 10%;
+    animation: drift 14s ease-in-out infinite alternate-reverse;
+  }
+  @keyframes drift { from { transform: translate(0,0) scale(1); } to { transform: translate(30px,20px) scale(1.05); } }
+
+  nav {
+    position: relative; z-index: 10;
+    padding: 36px 64px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem; font-weight: 600;
+    color: var(--cream); letter-spacing: .1em;
+  }
+  .logo span { color: var(--rose); }
+  .nav-tag {
+    font-size: .7rem; letter-spacing: .2em; text-transform: uppercase;
+    color: var(--rose); opacity: .8;
+  }
+
+  .hero-content {
+    position: relative; z-index: 10;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 0 64px;
+    max-width: 900px;
+  }
+
+  .hero-eyebrow {
+    font-size: .7rem; letter-spacing: .3em; text-transform: uppercase;
+    color: var(--rose); margin-bottom: 28px;
+    opacity: 0; animation: fadeUp .8s .3s forwards;
+  }
+
+  .hero-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(3rem, 6vw, 5.5rem);
+    font-weight: 300; line-height: 1.1;
+    color: var(--cream);
+    opacity: 0; animation: fadeUp .9s .5s forwards;
+  }
+  .hero-title em { font-style: italic; color: var(--rose); }
+
+  .hero-body {
+    margin-top: 28px;
+    font-size: 1.05rem; line-height: 1.75;
+    color: rgba(248,242,235,.65);
+    max-width: 560px;
+    opacity: 0; animation: fadeUp .9s .7s forwards;
+  }
+
+  .hero-stat {
+    margin-top: 48px;
+    display: flex; align-items: baseline; gap: 16px;
+    opacity: 0; animation: fadeUp .9s .9s forwards;
+  }
+  .hero-stat-number {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 4.5rem; font-weight: 300;
+    color: var(--clay); line-height: 1;
+  }
+  .hero-stat-label {
+    font-size: .85rem; color: rgba(248,242,235,.5);
+    max-width: 180px; line-height: 1.5;
+  }
+
+  .hero-scroll {
+    position: relative; z-index: 10;
+    padding: 36px 64px;
+    display: flex; align-items: center; gap: 12px;
+    opacity: 0; animation: fadeUp .8s 1.1s forwards;
+  }
+  .hero-scroll-line {
+    width: 40px; height: 1px;
+    background: var(--rose); opacity: .5;
+    animation: expandLine 2s 1.5s ease forwards;
+    transform-origin: left; transform: scaleX(0);
+  }
+  @keyframes expandLine { to { transform: scaleX(1); } }
+  .hero-scroll span {
+    font-size: .7rem; letter-spacing: .2em; text-transform: uppercase;
+    color: var(--rose); opacity: .6;
+  }
+
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* SECTION BASE */
+  section { position: relative; z-index: 1; }
+
+  .reveal {
+    opacity: 0; transform: translateY(40px);
+    transition: opacity .8s ease, transform .8s ease;
+  }
+  .reveal.visible { opacity: 1; transform: translateY(0); }
+
+  /* SECTION: CLIENTE */
+  .section-cliente {
+    background: var(--sand);
+    padding: 120px 64px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+  }
+  .section-label {
+    font-size: .65rem; letter-spacing: .3em; text-transform: uppercase;
+    color: var(--clay); margin-bottom: 20px; display: block;
+  }
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(2.2rem, 3.5vw, 3.2rem);
+    font-weight: 400; line-height: 1.2;
+    color: var(--espresso);
+  }
+  .section-title em { font-style: italic; color: var(--clay); }
+  .section-body {
+    font-size: .95rem; line-height: 1.8;
+    color: #4A3728; margin-top: 20px;
+  }
+
+  .cliente-visual {
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .cliente-card {
+    background: var(--cream);
+    border-radius: 20px;
+    padding: 24px 28px;
+    border-left: 3px solid var(--clay);
+    transition: transform .3s ease, box-shadow .3s ease;
+  }
+  .cliente-card:hover { transform: translateX(8px); box-shadow: -8px 8px 30px rgba(192,122,90,.15); }
+  .cliente-card-tag {
+    font-size: .6rem; letter-spacing: .25em; text-transform: uppercase;
+    color: var(--sage); margin-bottom: 8px;
+  }
+  .cliente-card p {
+    font-size: .88rem; line-height: 1.6; color: #4A3728;
+  }
+  .cliente-highlight {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.5rem; font-style: italic;
+    color: var(--clay); margin-top: 24px;
+    padding: 20px 0;
+    border-top: 1px solid rgba(192,122,90,.2);
+    border-bottom: 1px solid rgba(192,122,90,.2);
+  }
+
+  /* SECTION: HEMORRAGIAS */
+  .section-hemorragias {
+    background: var(--espresso);
+    padding: 120px 64px;
+    position: relative;
+    overflow: hidden;
+  }
+  .section-hemorragias::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(192,122,90,.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .hemorragias-header {
+    text-align: center; max-width: 780px; margin: 0 auto 80px;
+  }
+  .hemorragias-header .section-title { color: var(--cream); }
+  .hemorragias-header .section-body { color: rgba(248,242,235,.55); }
+  .hemorragias-header .section-title em { color: #E05A5A; font-style: italic; }
+
+  .hemorragias-grid {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .hemo-card {
+    background: rgba(255,255,255,.03);
+    border: none;
+    border-bottom: 1px solid rgba(255,255,255,.05);
+    border-radius: 0;
+    padding: 56px 64px;
+    transition: background .3s, transform .2s;
+    position: relative; overflow: hidden;
+    display: grid;
+    grid-template-columns: 200px 1fr 1fr;
+    gap: 60px;
+    align-items: center;
+  }
+  .hemo-card:first-child { border-top: 1px solid rgba(255,255,255,.05); }
+  .hemo-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; bottom: 0;
+    width: 3px;
+    background: linear-gradient(180deg, #E05A5A, rgba(192,122,90,.3));
+    transform: scaleY(0); transform-origin: top;
+    transition: transform .5s ease;
+  }
+  .hemo-card:hover::before { transform: scaleY(1); }
+  .hemo-card:hover { background: rgba(255,255,255,.05); }
+
+  .hemo-left { display: flex; flex-direction: column; align-items: flex-start; }
+  .hemo-icon {
+    font-size: 2.4rem; margin-bottom: 16px;
+    display: block;
+    filter: drop-shadow(0 0 12px rgba(224,90,90,.5));
+    animation: pulse-icon 3s ease-in-out infinite;
+  }
+  @keyframes pulse-icon {
+    0%, 100% { filter: drop-shadow(0 0 8px rgba(224,90,90,.4)); }
+    50% { filter: drop-shadow(0 0 20px rgba(224,90,90,.8)); }
+  }
+  .hemo-number {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 5rem; font-weight: 300;
+    color: rgba(192,122,90,.12);
+    line-height: 1;
+    position: static;
+  }
+  .hemo-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2rem; color: var(--cream);
+    margin-bottom: 16px; line-height: 1.2;
+  }
+  .hemo-body { font-size: .9rem; line-height: 1.8; color: rgba(248,242,235,.55); }
+  .hemo-examples {
+    padding: 20px 28px;
+    background: rgba(224,90,90,.06);
+    border-radius: 16px;
+    border: 1px solid rgba(224,90,90,.12);
+  }
+  .hemo-example {
+    font-size: .82rem; color: rgba(217,176,163,.8);
+    padding: 6px 0; line-height: 1.5;
+    border-bottom: 1px solid rgba(255,255,255,.04);
+  }
+  .hemo-example:last-child { border-bottom: none; }
+  .hemo-example::before { content: '— '; opacity: .4; }
+
+  /* SECTION: SOLUCOES */
+  .section-solucoes {
+    background: var(--mist);
+    padding: 120px 64px;
+  }
+  .solucoes-header {
+    max-width: 600px; margin-bottom: 80px;
+  }
+  .solucoes-list {
+    display: flex; flex-direction: column; gap: 0;
+  }
+  .solucao-item {
+    display: grid;
+    grid-template-columns: 80px 1fr 1fr;
+    gap: 48px;
+    align-items: start;
+    padding: 48px 0;
+    border-bottom: 1px solid rgba(192,122,90,.15);
+    transition: background .3s;
+  }
+  .solucao-item:first-child { border-top: 1px solid rgba(192,122,90,.15); }
+  .solucao-num {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 3rem; font-weight: 300;
+    color: rgba(192,122,90,.25); line-height: 1;
+    padding-top: 4px;
+  }
+  .solucao-left-icon {
+    font-size: 1.4rem; margin-bottom: 12px;
+  }
+  .solucao-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.6rem; color: var(--espresso); margin-bottom: 12px;
+  }
+  .solucao-desc {
+    font-size: .88rem; line-height: 1.75;
+    color: #4A3728;
+  }
+  .solucao-example {
+    background: var(--cream);
+    border-radius: 20px;
+    padding: 24px 28px;
+    border-left: 3px solid var(--sage);
+  }
+  .solucao-example-label {
+    font-size: .6rem; letter-spacing: .25em; text-transform: uppercase;
+    color: var(--sage); margin-bottom: 12px;
+  }
+  .solucao-example p {
+    font-size: .83rem; line-height: 1.7;
+    color: #4A3728; font-style: italic;
+  }
+  .chat-bubble {
+    background: #fff;
+    border-radius: 18px 18px 18px 4px;
+    padding: 14px 18px;
+    font-size: .82rem; line-height: 1.6;
+    color: var(--espresso);
+    box-shadow: 0 4px 20px rgba(0,0,0,.08);
+    position: relative;
+    margin-top: 10px;
+  }
+  .chat-bubble.sent {
+    border-radius: 18px 18px 4px 18px;
+    background: linear-gradient(135deg, var(--clay), var(--accent));
+    color: var(--cream); align-self: flex-end; margin-left: auto;
+  }
+  .chat-name { font-size: .65rem; color: var(--sage); margin-bottom: 6px; font-weight: 500; }
+
+  /* SECTION: TIMELINE */
+  .section-timeline {
+    background: var(--espresso);
+    padding: 120px 64px;
+  }
+  .timeline-header {
+    text-align: center; max-width: 540px; margin: 0 auto 80px;
+  }
+  .timeline-header .section-title { color: var(--cream); }
+  .timeline-header .section-body { color: rgba(248,242,235,.55); }
+
+  .timeline-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0;
+    position: relative;
+  }
+  .timeline-grid::before {
+    content: '';
+    position: absolute;
+    top: 36px; left: 10%; right: 10%; height: 1px;
+    background: linear-gradient(90deg, transparent, var(--clay), var(--rose), var(--sage), transparent);
+    opacity: .3;
+  }
+  .timeline-item {
+    padding: 0 24px;
+    text-align: center;
+    position: relative;
+  }
+  .timeline-dot {
+    width: 14px; height: 14px;
+    border-radius: 50%;
+    background: var(--clay);
+    margin: 0 auto 24px;
+    box-shadow: 0 0 0 4px rgba(192,122,90,.2), 0 0 20px rgba(192,122,90,.4);
+    position: relative; z-index: 1;
+    transition: transform .3s ease;
+  }
+  .timeline-item:hover .timeline-dot { transform: scale(1.5); }
+  .timeline-day {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 2.5rem; font-weight: 300;
+    color: var(--rose); line-height: 1; margin-bottom: 12px;
+  }
+  .timeline-title {
+    font-size: .8rem; font-weight: 500; letter-spacing: .05em;
+    color: var(--cream); margin-bottom: 10px;
+  }
+  .timeline-desc {
+    font-size: .78rem; line-height: 1.6;
+    color: rgba(248,242,235,.45);
+  }
+
+  /* SECTION: CTA */
+  .section-cta {
+    background: var(--sand);
+    padding: 140px 64px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+  }
+  .cta-left .section-title { font-size: clamp(2.5rem, 4vw, 3.8rem); }
+  .cta-left .section-body { margin-top: 24px; font-size: 1rem; }
+  .cta-quote {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.4rem; font-style: italic;
+    color: var(--clay); margin-top: 40px;
+    padding-top: 32px;
+    border-top: 1px solid rgba(192,122,90,.25);
+    line-height: 1.5;
+  }
+  .cta-right {
+    background: var(--espresso);
+    border-radius: 32px;
+    padding: 48px 44px;
+    position: relative; overflow: hidden;
+  }
+  .cta-right::after {
+    content: '';
+    position: absolute; bottom: -60px; right: -60px;
+    width: 200px; height: 200px;
+    border-radius: 50%;
+    background: var(--clay); opacity: .1;
+  }
+  .cta-form-label {
+    font-size: .65rem; letter-spacing: .25em; text-transform: uppercase;
+    color: var(--rose); margin-bottom: 28px; display: block;
+  }
+  .cta-title-form {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.8rem; color: var(--cream); margin-bottom: 8px;
+  }
+  .cta-sub {
+    font-size: .82rem; color: rgba(248,242,235,.45);
+    margin-bottom: 36px; line-height: 1.6;
+  }
+  .cta-features {
+    display: flex; flex-direction: column; gap: 14px; margin-bottom: 36px;
+  }
+  .cta-feature {
+    display: flex; gap: 12px; align-items: flex-start;
+  }
+  .cta-feature-dot {
+    width: 6px; height: 6px; border-radius: 50%;
+    background: var(--clay); margin-top: 6px; flex-shrink: 0;
+  }
+  .cta-feature span { font-size: .82rem; color: rgba(248,242,235,.65); line-height: 1.5; }
+  .cta-btn {
+    display: block; width: 100%;
+    background: linear-gradient(135deg, var(--clay), var(--accent));
+    color: var(--cream);
+    border: none; border-radius: 14px;
+    padding: 18px 24px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .88rem; font-weight: 500;
+    letter-spacing: .05em;
+    cursor: none;
+    transition: transform .2s, box-shadow .2s, opacity .2s;
+    position: relative; z-index: 1;
+  }
+  .cta-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(192,122,90,.4);
+  }
+  .cta-btn-sub {
+    display: block; text-align: center;
+    font-size: .7rem; color: rgba(248,242,235,.3);
+    margin-top: 12px; letter-spacing: .05em;
+  }
+
+  /* FOOTER */
+  footer {
+    background: var(--espresso);
+    border-top: 1px solid rgba(255,255,255,.05);
+    padding: 48px 64px;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .footer-logo {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.2rem; color: var(--cream); letter-spacing: .1em;
+  }
+  .footer-logo span { color: var(--rose); }
+  .footer-tagline {
+    font-size: .72rem; letter-spacing: .15em; text-transform: uppercase;
+    color: rgba(248,242,235,.3);
+  }
+
+  /* FLOATING ACCENT */
+  .float-accent {
+    position: fixed; bottom: 40px; right: 40px;
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--clay), var(--accent));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.2rem;
+    box-shadow: 0 8px 30px rgba(192,122,90,.4);
+    cursor: none;
+    transition: transform .2s ease;
+    z-index: 100;
+  }
+  .float-accent:hover { transform: scale(1.1) rotate(-10deg); }
+
+  /* SCROLL PROGRESS */
+  .scroll-progress {
+    position: fixed; top: 0; left: 0; right: 0; height: 2px;
+    background: rgba(255,255,255,.08); z-index: 1000;
+  }
+  .scroll-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, var(--clay), var(--rose));
+    width: 0; transition: width .1s;
+  }
+
+  /* RESPONSIVE SIMPLIFICATIONS */
+  @media (max-width: 900px) {
+    nav, .hero-content, .hero-scroll { padding-left: 32px; padding-right: 32px; }
+    .section-cliente, .section-cta { grid-template-columns: 1fr; padding: 80px 32px; }
+    .section-hemorragias, .section-solucoes, .section-timeline { padding: 80px 32px; }
+    .hemo-card { grid-template-columns: 1fr; gap: 24px; padding: 40px 32px; }
+    .hemo-left { flex-direction: row; align-items: center; gap: 16px; }
+    .hemo-number { font-size: 3rem; }
+    .timeline-grid { grid-template-columns: 1fr 1fr; gap: 40px; }
+    .timeline-grid::before { display: none; }
+    .solucao-item { grid-template-columns: 1fr; gap: 24px; }
+    .solucao-num { display: none; }
+    footer { flex-direction: column; gap: 12px; padding: 36px 32px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="cursor" id="cursor"></div>
+<div class="scroll-progress"><div class="scroll-progress-bar" id="progressBar"></div></div>
+<div class="float-accent" title="Fale conosco">💬</div>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-circle c1"></div>
+  <div class="hero-circle c2"></div>
+
+  <nav>
+    <div class="logo">plexo<span>.</span></div>
+    <div class="nav-tag">IA para marcas wellness</div>
+  </nav>
+
+  <div class="hero-content">
+    <span class="hero-eyebrow">A verdade que ninguém te conta</span>
+    <h1 class="hero-title">
+      Sua cliente chegou.<br>
+      Ficou. Saiu<br>
+      <em>sem comprar.</em>
+    </h1>
+    <p class="hero-body">
+      Ela estava no site. Olhou o produto com atenção. Ficou alguns minutos. Tinha uma dúvida — pequena, específica, pessoal. Não encontrou a resposta. Foi embora.
+    </p>
+    <div class="hero-stat">
+      <span class="hero-stat-number">8/10</span>
+      <span class="hero-stat-label">pessoas chegam ao carrinho e não finalizam a compra</span>
+    </div>
+  </div>
+
+  <div class="hero-scroll">
+    <div class="hero-scroll-line"></div>
+    <span>continue lendo</span>
+  </div>
+</section>
+
+<!-- CLIENTE -->
+<section class="section-cliente">
+  <div class="reveal">
+    <span class="section-label">quem é ela</span>
+    <h2 class="section-title">Sua cliente não compra<br><em>produto.</em> Ela compra<br>transformação.</h2>
+    <p class="section-body">
+      Seja qual for o seu produto — suplementos, moda fitness, velas aromáticas, cosméticos — ele é a materialização pela qual sua cliente atinge o objetivo real: <strong style="color:var(--clay)">se sentir bem.</strong>
+    </p>
+    <p class="section-body" style="margin-top:14px;">
+      Por isso ela pesquisa com cuidado, compara, pede opinião, lê sobre os ingredientes, confere se combina com a rotina dela. Cada detalhe importa — porque o que está em jogo não é o produto. É como ela vai se sentir depois que ele chegar.
+    </p>
+    <div class="cliente-highlight">
+      "Quando ela confia numa marca?<br>Ela vira cliente para vida toda."
+    </div>
+  </div>
+
+  <div class="reveal" style="transition-delay:.2s">
+    <div class="cliente-visual">
+      <div class="cliente-card">
+        <div class="cliente-card-tag">Suplementos / Saúde</div>
+        <p>Ela quer saber se aquele colágeno é compatível com o suplemento que já toma — e nenhuma FAQ responde isso.</p>
+      </div>
+      <div class="cliente-card">
+        <div class="cliente-card-tag">Moda Fitness</div>
+        <p>Ela quer saber se o tecido comprime na corrida, se desbota rápido, qual modelagem vai valorizar o corpo dela.</p>
+      </div>
+      <div class="cliente-card">
+        <div class="cliente-card-tag">Skincare / Beleza Natural</div>
+        <p>Ela quer saber se funciona para pele sensível e rosacea — e está disposta a pagar mais pela resposta certa.</p>
+      </div>
+      <div class="cliente-card">
+        <div class="cliente-card-tag">Serviços Terapêuticos</div>
+        <p>Ela quer entender como funciona a primeira sessão antes de abrir a carteira. Confiança antes de conversão.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- HEMORRAGIAS -->
+<section class="section-hemorragias">
+  <div class="hemorragias-header reveal">
+    <span class="section-label" style="color:#E05A5A;letter-spacing:.3em">sangramento ativo</span>
+    <h2 class="section-title">Sua empresa está em hemorragia.<br>Essas são as <em>3 feridas</em> drenando<br>seu faturamento:</h2>
+    <p class="section-body">Cada uma silenciosa. Cada uma operando agora mesmo, enquanto você lê isso.</p>
+  </div>
+
+  <div class="hemorragias-grid">
+    <div class="hemo-card reveal">
+      <div class="hemo-left">
+        <span class="hemo-icon">🩸</span>
+        <span class="hemo-number">01</span>
+      </div>
+      <div>
+        <h3 class="hemo-title">A dúvida que vira abandono</h3>
+        <p class="hemo-body">Ela estava perto de comprar. Mas tinha uma dúvida — sobre o produto, sobre ela mesma, sobre se fazia sentido pra sua vida. Não encontrou resposta rápida. Saiu. No wellness, cada dúvida sem resposta é uma venda perdida — e ela não volta.</p>
+      </div>
+      <div class="hemo-examples">
+        <div class="hemo-example">O tecido comprime na corrida?</div>
+        <div class="hemo-example">A fragrância é forte ou suave?</div>
+        <div class="hemo-example">Funciona para pele sensível?</div>
+        <div class="hemo-example">Como é a primeira sessão?</div>
+      </div>
+    </div>
+
+    <div class="hemo-card reveal" style="transition-delay:.1s">
+      <div class="hemo-left">
+        <span class="hemo-icon">🩸</span>
+        <span class="hemo-number">02</span>
+      </div>
+      <div>
+        <h3 class="hemo-title">A recompra que não acontece</h3>
+        <p class="hemo-body">Ela comprou. Amou. Sumiu. Não porque não quer mais — mas porque a vida atropelou. O pote acabou e ela não lembrou de repor. Você gastou para adquirir essa cliente. E depois deixou ela ir embora depois de uma única compra — que poderia ser a primeira de muitas.</p>
+      </div>
+      <div class="hemo-examples">
+        <div class="hemo-example">O suplemento acabou e ela foi no mercado</div>
+        <div class="hemo-example">O legging desbotou e ela achou outra loja</div>
+        <div class="hemo-example">A vela acabou e ela comprou da concorrência</div>
+      </div>
+    </div>
+
+    <div class="hemo-card reveal" style="transition-delay:.2s">
+      <div class="hemo-left">
+        <span class="hemo-icon">🩸</span>
+        <span class="hemo-number">03</span>
+      </div>
+      <div>
+        <h3 class="hemo-title">O atendimento que virou gargalo</h3>
+        <p class="hemo-body">Sua equipe responde as mesmas perguntas todo dia. Enquanto isso, a cliente que estava pronta para comprar ficou esperando horas — e perdeu o impulso. Cada hora de espera é uma janela de intenção que se fecha.</p>
+      </div>
+      <div class="hemo-examples">
+        <div class="hemo-example">Tem na cor X?</div>
+        <div class="hemo-example">Como funciona o agendamento?</div>
+        <div class="hemo-example">Qual tamanho escolho?</div>
+        <div class="hemo-example">Quanto tempo dura?</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SOLUÇÕES -->
+<section class="section-solucoes">
+  <div class="solucoes-header reveal">
+    <span class="section-label">a solução</span>
+    <h2 class="section-title">O que muda quando você coloca IA<br>para trabalhar <em>pela sua marca</em></h2>
+  </div>
+
+  <div class="solucoes-list">
+    <!-- 1 -->
+    <div class="solucao-item reveal">
+      <span class="solucao-num">01</span>
+      <div>
+        <div class="solucao-left-icon">💎</div>
+        <h3 class="solucao-title">A consultora que sua cliente sempre quis encontrar</h3>
+        <p class="solucao-desc">Às 23h, sua cliente está no seu site. Ela quer ajuda para escolher. Em segundos recebe uma resposta que parece ter sido escrita por alguém que conhece seus produtos de cor. Não é um menu robotizado — é uma conversa real, no tom da sua marca.</p>
+      </div>
+      <div class="solucao-example">
+        <div class="solucao-example-label">Na prática</div>
+        <div class="chat-bubble">
+          <div class="chat-name">Cliente</div>
+          Qual modelo de legging é melhor pra quem faz corrida e HIIT?
+        </div>
+        <div class="chat-bubble sent" style="margin-top:10px; margin-left:auto; width:85%">
+          Pra quem combina corrida com HIIT, o modelo Fusion é o mais indicado — tecido compressivo de 4 vias que não agarra no movimento explosivo. A Flex também é ótima, mas tem mais compressão abdominal 🏃‍♀️
+        </div>
+      </div>
+    </div>
+
+    <!-- 2 -->
+    <div class="solucao-item reveal">
+      <span class="solucao-num">02</span>
+      <div>
+        <div class="solucao-left-icon">🔄</div>
+        <h3 class="solucao-title">O lembrete que chega antes dela ir buscar em outro lugar</h3>
+        <p class="solucao-desc">Você sabe quanto tempo dura o seu produto. O agente de IA sabe também. No momento certo — antes de acabar, antes de ela esquecer — ela recebe uma mensagem no WhatsApp com contexto, com o produto dela, com um motivo real para voltar.</p>
+      </div>
+      <div class="solucao-example">
+        <div class="solucao-example-label">Mensagem real · WhatsApp</div>
+        <div class="chat-bubble">
+          <div class="chat-name">Plexo AI · via WhatsApp</div>
+          Oi Juliana! Sua vela de eucalipto deve estar quase no fim 🌿 Já separamos uma nova pra você — quer que a gente deixe guardada?
+        </div>
+        <div style="margin-top:10px">
+        <div class="chat-bubble">
+          <div class="chat-name">Plexo AI · via WhatsApp</div>
+          Oi Fernanda! Faz um mês desde a sua última sessão. Como você está se sentindo? Que tal marcarmos a próxima? 💚
+        </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3 -->
+    <div class="solucao-item reveal">
+      <span class="solucao-num">03</span>
+      <div>
+        <div class="solucao-left-icon">🛒</div>
+        <h3 class="solucao-title">O carrinho recuperado — que já era seu</h3>
+        <p class="solucao-desc">Ela colocou o produto no carrinho, foi responder uma mensagem e não voltou. Duas horas depois, ela recebe no WhatsApp uma mensagem sobre aquele produto específico — com o benefício que ela estava buscando, sem pressão, com personalidade.</p>
+      </div>
+      <div class="solucao-example">
+        <div class="solucao-example-label">Recuperação inteligente</div>
+        <div class="chat-bubble">
+          <div class="chat-name">Plexo AI · via WhatsApp</div>
+          Carol, você deixou o Sérum Vitamina C no carrinho 🍊 Ele é perfeito pra quem quer uniformizar a pele com rotina simples. Quer finalizar? A gente garante o frete grátis até meia-noite 💛
+        </div>
+      </div>
+    </div>
+
+    <!-- 4 -->
+    <div class="solucao-item reveal" style="border-bottom:none">
+      <span class="solucao-num">04</span>
+      <div>
+        <div class="solucao-left-icon">💬</div>
+        <h3 class="solucao-title">O atendimento que não para nunca — e não sobrecarrega ninguém</h3>
+        <p class="solucao-desc">Dúvidas técnicas, pré-venda, pós-venda, rastreio de pedido, agendamento, política de troca — tudo resolvido na hora, com o tom de voz da sua marca, 24 horas por dia. Sua equipe entra só quando realmente precisa.</p>
+      </div>
+      <div class="solucao-example">
+        <div class="solucao-example-label">Cobertura total</div>
+        <p style="font-size:.82rem;line-height:1.7;color:#4A3728;font-style:italic">
+          Pré-venda · Pós-venda · Trocas e devoluções · Rastreio · Agendamento · Dúvidas técnicas sobre produto · Recomendação personalizada — tudo automatizado, com a voz da sua marca.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TIMELINE -->
+<section class="section-timeline">
+  <div class="timeline-header reveal">
+    <span class="section-label" style="color:var(--rose)">resultados</span>
+    <h2 class="section-title" style="color:var(--cream)">O que você vê<br>na primeira semana</h2>
+    <p class="section-body">Da ativação até a primeira receita recuperada — tudo rastreável, tudo seu.</p>
+  </div>
+
+  <div class="timeline-grid">
+    <div class="timeline-item reveal">
+      <div class="timeline-dot"></div>
+      <div class="timeline-day">Dia 1</div>
+      <div class="timeline-title">Atendimento on</div>
+      <p class="timeline-desc">Respostas em segundos. Nenhuma cliente esperando. Sua equipe liberada para o que importa.</p>
+    </div>
+    <div class="timeline-item reveal" style="transition-delay:.15s">
+      <div class="timeline-dot" style="background:var(--rose)"></div>
+      <div class="timeline-day">Dia 2</div>
+      <div class="timeline-title">Primeiro carrinho recuperado</div>
+      <p class="timeline-desc">Receita que já estava perdida volta. O primeiro retorno já cobre parte do investimento.</p>
+    </div>
+    <div class="timeline-item reveal" style="transition-delay:.3s">
+      <div class="timeline-dot" style="background:var(--sage)"></div>
+      <div class="timeline-day">Dia 5</div>
+      <div class="timeline-title">Reposições disparadas</div>
+      <p class="timeline-desc">Primeiros lembretes de reposição e retorno chegam para a base. Recompra ativada.</p>
+    </div>
+    <div class="timeline-item reveal" style="transition-delay:.45s">
+      <div class="timeline-dot" style="background:var(--clay);box-shadow:0 0 0 4px rgba(192,122,90,.3),0 0 30px rgba(192,122,90,.5)"></div>
+      <div class="timeline-day">Dia 7</div>
+      <div class="timeline-title">Dashboard ao vivo</div>
+      <p class="timeline-desc">Conversões, perguntas mais frequentes, ticket médio, clientes reativadas. Tudo na sua frente.</p>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="section-cta">
+  <div class="reveal">
+    <span class="section-label">o próximo passo</span>
+    <h2 class="section-title">Isso não é o futuro. É a decisão de <em>HOJE</em> que vai definir as marcas que escalam das marcas que estagnam ou morrem nos primeiros 3 anos.</h2>
+    <p class="section-body">
+      O mercado wellness está crescendo — e as marcas que vão dominar os próximos anos são as que conseguirem entregar experiência de especialista em escala. Que fazem a cliente se sentir vista, compreendida e lembrada.
+    </p>
+    <div class="cta-quote">
+      "A IA não substitui a alma da sua marca.<br>Ela amplifica o que você já faz bem."
+    </div>
+  </div>
+
+  <div class="reveal" style="transition-delay:.2s">
+    <div class="cta-right">
+      <span class="cta-form-label">diagnóstico gratuito · vagas limitadas</span>
+      <h3 class="cta-title-form">Descubra agora quanto dinheiro sua operação está deixando na mesa</h3>
+      <p class="cta-sub">Uma conversa direta com quem já mapeou os padrões de perda de receita em e-commerces wellness. Você sai com clareza — não com um pitch.</p>
+      <div class="cta-features">
+        <div class="cta-feature">
+          <div class="cta-feature-dot"></div>
+          <span>Diagnóstico real dos seus maiores vazamentos de faturamento — com dados, não achismo</span>
+        </div>
+        <div class="cta-feature">
+          <div class="cta-feature-dot"></div>
+          <span>Visualização concreta do que a IA já estaria fazendo diferente na sua operação hoje</span>
+        </div>
+        <div class="cta-feature">
+          <div class="cta-feature-dot"></div>
+          <span>Projeção de impacto em receita para os primeiros 30 dias — você decide se faz sentido</span>
+        </div>
+      </div>
+      <button class="cta-btn" onclick="this.textContent='Em breve entraremos em contato ✨'; this.style.background='linear-gradient(135deg,#7A9E8E,#5a8070)'">
+        Quero saber o que estou perdendo →
+      </button>
+      <span class="cta-btn-sub">Gratuito · Sem compromisso · Poucas vagas abertas por semana</span>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">plexo<span>.</span></div>
+  <div class="footer-tagline">Performance · Dados · Automação · IA para Wellness</div>
+</footer>
+
+<script>
+// CURSOR
+const cursor = document.getElementById('cursor');
+document.addEventListener('mousemove', e => {
+  cursor.style.left = e.clientX + 'px';
+  cursor.style.top = e.clientY + 'px';
+});
+document.querySelectorAll('a, button, .hemo-card, .cliente-card, .solucao-item, .timeline-item, .float-accent').forEach(el => {
+  el.addEventListener('mouseenter', () => cursor.classList.add('grow'));
+  el.addEventListener('mouseleave', () => cursor.classList.remove('grow'));
+});
+
+// SCROLL PROGRESS
+const bar = document.getElementById('progressBar');
+window.addEventListener('scroll', () => {
+  const total = document.body.scrollHeight - window.innerHeight;
+  const pct = (window.scrollY / total) * 100;
+  bar.style.width = pct + '%';
+});
+
+// REVEAL ON SCROLL
+const reveals = document.querySelectorAll('.reveal');
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) { e.target.classList.add('visible'); }
+  });
+}, { threshold: 0.12 });
+reveals.forEach(r => observer.observe(r));
+</script>
+</body>
+</html>
